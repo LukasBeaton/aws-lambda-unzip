@@ -52,6 +52,7 @@ public class S3EventProcessorUnzip implements RequestHandler<S3Event, String> {
                 // Download the zip from S3 into a stream
                 AmazonS3 s3Client = new AmazonS3Client();
                 S3Object s3Object = s3Client.getObject(new GetObjectRequest(srcBucket, srcKey));
+                AccessControlList zipFileACL = s3Client.getObjectAcl(srcBucket, srcKey) // get ZIP file ACL so we can ensure it gets set on the unpacked objects
                 ZipInputStream zis = new ZipInputStream(s3Object.getObjectContent());
                 ZipEntry entry = zis.getNextEntry();
 
@@ -67,6 +68,7 @@ public class S3EventProcessorUnzip implements RequestHandler<S3Event, String> {
                     ObjectMetadata meta = new ObjectMetadata();
                     meta.setContentLength(outputStream.size());
                     s3Client.putObject(srcBucket, fileName, is, meta);
+                    s3Client.setObjectAcl(srcBucket, fileName, zipFileACL); // set ACL from ZIP file
                     is.close();
                     outputStream.close();
                     entry = zis.getNextEntry();
