@@ -1,9 +1,15 @@
-# aws-lambda-unzip
+# aws-lambda-s3-unzip-website
 Function for AWS Lambda to extract zip files uploaded to S3
 
 Files are extracted in place in the same bucket as where the zip file was uploaded. Any files present with the same name are overwritten. The zip file is deleted at the end of the operation.
 
-NOTE: Fork from Craftware/aws-lambda-unzip, thank you!!!!
+**Customizations:**
+
+* add support to properly derive/set ContentType for files common to a frontend web client
+* set CacheControl so that files are not cached by the web browser 
+
+**NOTE:** Fork from Craftware/aws-lambda-unzip, thank you!!!!
+
 
 ## Necessary permissions
 In order to remove the uploaded zip file, the role configured in your Lambda function should have a policy looking like this:

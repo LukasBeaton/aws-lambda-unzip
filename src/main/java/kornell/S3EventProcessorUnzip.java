@@ -1,5 +1,7 @@
 package kornell;
 
+import org.springframework.mail.javamail.ConfigurableMimeFileTypeMap;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -52,7 +54,6 @@ public class S3EventProcessorUnzip implements RequestHandler<S3Event, String> {
                 // Download the zip from S3 into a stream
                 AmazonS3 s3Client = new AmazonS3Client();
                 S3Object s3Object = s3Client.getObject(new GetObjectRequest(srcBucket, srcKey));
-                AccessControlList zipFileACL = s3Client.getObjectAcl(srcBucket, srcKey) // get ZIP file ACL so we can ensure it gets set on the unpacked objects
                 ZipInputStream zis = new ZipInputStream(s3Object.getObjectContent());
                 ZipEntry entry = zis.getNextEntry();
 
@@ -67,8 +68,48 @@ public class S3EventProcessorUnzip implements RequestHandler<S3Event, String> {
                     InputStream is = new ByteArrayInputStream(outputStream.toByteArray());
                     ObjectMetadata meta = new ObjectMetadata();
                     meta.setContentLength(outputStream.size());
+
+
+
+                    /*************************************************************
+                     * BEGIN WEBSITE SPECIFIC CHANGES
+                     *************************************************************/
+                    //NOTE: do not set cache for now. This will actually prevent CloudFront from caching not just the broswer.
+                    //meta.setCacheControl("max-age=0,s-maxage=0");
+
+                    /* IMPORTANT
+                     * Set the ContentType or the AWS Java SDK will default it to application/octet-stream. 
+                     * And you will have a bad time
+                     *
+                     * https://github.com/aws/aws-sdk-java/blob/9243e0716bc2a649085480d3a4fb7606b6541da3/aws-java-sdk-s3/src/main/java/com/amazonaws/services/s3/model/ObjectMetadata.java#L391
+                     *
+                     * -LB
+                     */
+                    ConfigurableMimeFileTypeMap mimeMap = new ConfigurableMimeFileTypeMap();
+                    String[] newMimeTypes = new String[]{
+                      "application/json json",
+                      "image/gif gif",
+                      "image/jpeg jpeg jpg",
+                      "image/png png",
+                      "image/svg+xml svg",
+                      "image/x-icon ico",
+                      "text/css css",
+                      "text/html html",
+                      "text/javascript js",
+                      "text/xml xml",
+                      "text/x-handlebars-template handlebars"
+                    };
+                    mimeMap.setMappings(newMimeTypes);
+                    String contentType = mimeMap.getContentType(fileName);
+                    meta.setContentType(contentType);
+                    /*************************************************************
+                     * END WEBSITE SPECIFIC CHANGES
+                     *************************************************************/
+
+
+
+
                     s3Client.putObject(srcBucket, fileName, is, meta);
-                    s3Client.setObjectAcl(srcBucket, fileName, zipFileACL); // set ACL from ZIP file
                     is.close();
                     outputStream.close();
                     entry = zis.getNextEntry();
@@ -85,5 +126,4 @@ public class S3EventProcessorUnzip implements RequestHandler<S3Event, String> {
             throw new RuntimeException(e);
         }
     }
-
 }
