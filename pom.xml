@@ -1,7 +1,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>kornell</groupId>
-  <artifactId>aws-lambda-unzip</artifactId>
+  <artifactId>aws-lambda-s3-unzip-website</artifactId>
   <version>0.0.1-SNAPSHOT</version>
   <build>
     <sourceDirectory>src</sourceDirectory>
@@ -43,5 +43,11 @@
   		<artifactId>aws-lambda-java-events</artifactId>
   		<version>1.1.0</version>
   	</dependency>
+    <!-- required for org.springframework.mail.javamail.ConfigurableMimeFileTypeMap -->
+    <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-context-support</artifactId>
+        <version>3.2.8.RELEASE</version>
+    </dependency>
   </dependencies>
 </project>
